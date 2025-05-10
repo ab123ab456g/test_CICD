@@ -20,7 +20,7 @@ def send_email():
         token_uri='https://oauth2.googleapis.com/token'
     )
     service = build('gmail', 'v1', credentials=creds)
-    message = create_message("你@gmail.com", "收件人@gmail.com", "✅ CI/CD 成功通知", "你的 Flask App 測試與部署已完成！")
+    message = create_message("ab123ab456g@gmail.com", "ab123ab456g@gmail.com", "✅ CI/CD 成功通知", "你的 Flask App 測試與部署已完成！")
     send_message = service.users().messages().send(userId="me", body=message).execute()
     print(f"訊息已發送，ID: {send_message['id']}")
 
