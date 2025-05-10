@@ -54,7 +54,6 @@ jobs:
         GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
         GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
       run: |
-        pip install google-auth google-auth-oauthlib google-api-python-client
         if [ "${{ steps.deploy_heroku.outcome }}" = "success" ]; then
           python send_email.py "🚀 部署成功" "你的應用已成功部署到 Heroku！"
         else
