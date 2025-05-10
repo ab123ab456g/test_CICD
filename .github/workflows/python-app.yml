@@ -1,4 +1,4 @@
-name: Flask CI/CD Test
+name: Flask CI/CD Test and Deploy
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test-flask:
+  test-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,5 +25,39 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run tests
+      run: pytest
+
+    - name: 📬 Send Gmail (Test Success)
+      if: success()
+      env:
+        GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+        GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+        GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
       run: |
-        pytest
+        pip install google-auth google-auth-oauthlib google-api-python-client
+        python send_email.py "✅ 測試成功" "Flask 測試已通過，準備部署..."
+
+    - name: 🚀 Deploy to Heroku
+      id: deploy_step
+      if: success()
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: |
+        git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+        git push heroku HEAD:main -f
+
+    - name: 📬 Send Gmail (Deploy Success)
+      if: steps.deploy_step.outcome == 'success'
+      env:
+        GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+        GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+        GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+      run: python send_email.py "🚀 部署成功" "你的應用已成功部署到 Heroku！"
+
+    - name: 📬 Send Gmail (Deploy Failed)
+      if: steps.deploy_step.outcome == 'failure'
+      env:
+        GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+        GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+        GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+      run: python send_email.py "❌ 部署失敗" "部署 Heroku 發生錯誤，請檢查 CI log。"
